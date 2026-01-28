@@ -168,6 +168,10 @@ elif not_sistem == "2":
 else:
     print("Geçersiz not sistemi seçimi. Lütfen 1 veya 2 giriniz.")
 
+# Not karşılıklarını ters çevirerek her bir harf notun karşılık bir sayı notu vermiş olduk
+harften_puana = {harf: puan for puan, harf in not_karsiliklari.items()}
+
+
 print("\n" + "=" * 60)
 print("DERS VE NOT GİRİŞİ")
 print("=" * 60)
@@ -179,15 +183,34 @@ while sayac < ders_sayisi:
     
     # Girilen ders kodunun geçerli olup olmadığını kontrol et
     if ders_kodu in ders_bilgileri:
-        vize_notu = input("Vize notunuzu giriniz (0-100): ")
-        final_notu = input("Final notunuzu giriniz (0-100): ")
         
+        print("Yöntem 1: 100/95/88 vs\nYöntem 2: AA/BA/B1")
+        not_yontem = int(input("Not girme yöntemini seçiniz (1 veya 2): "))
+        
+        if(not_yontem == 2):
+            harf_notu = input("Harf notunu giriniz: ").upper()
+            while(harf_notu not in harften_puana):
+                print("Geçersiz harf notu tekrar deneyiniz")
+                harf_notu = input("Harf notunu giriniz: ").upper()
+        
+            ogrenci_notlari[ders_kodu] = {
+                "harf_notu" : harf_notu
+            }
+            
+            sayac += 1
+            print(f"{ders_kodu} kodlu ders için Harf Notu: {harf_notu}")
+            
+        
+        
+        elif(not_yontem == 1):
+            vize_notu = input("Vize notunuzu giriniz (0-100): ")
+            final_notu = input("Final notunuzu giriniz (0-100): ")
         # Girilen notların geçerli olup olmadığını kontrol et (0-100 arasında ve sayı olup olmadığını)
-        if not vize_notu.isdigit() or not final_notu.isdigit() or not (0 <= int(vize_notu) <= 100) or not (0 <= int(final_notu) <= 100):
-            print("Lütfen geçerli bir not giriniz.")
-        else:
-            vize_notu = int(vize_notu)
-            final_notu = int(final_notu)
+            if not vize_notu.isdigit() or not final_notu.isdigit() or not (0 <= int(vize_notu) <= 100) or not (0 <= int(final_notu) <= 100):
+                print("Lütfen geçerli bir not giriniz.")
+            else:
+                vize_notu = int(vize_notu)
+                final_notu = int(final_notu)
             # Dönem sonu notunu hesapla: Vize %40 + Final %60
             toplam_not = float(vize_notu * 0.4) + float(final_notu * 0.6)
             
@@ -271,8 +294,11 @@ toplam_puan = 0
 for ders_kodu, notlar in ogrenci_notlari.items():
     kredi = ders_bilgileri[ders_kodu]["kredi"]
     akts = ders_bilgileri[ders_kodu]["akts"]
+    # AKTS değeri etki etmeyen dersleri işleme almamayı sağlıyoruz
+    if akts == 0:
+        continue
     # 100'lük sistemdeki notu 4'lük sisteme çevir: (not / 100) * 4
-    gpa_degeri = (notlar["toplam"] / 100) * 4
+    gpa_degeri = harften_puana[notlar["harf_notu"]]
     toplam_kredi += kredi
     toplam_akts += akts
     # 4'lük sistem değerini AKTS ile çarpıp toplama ekle
